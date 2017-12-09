@@ -20,8 +20,8 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::middleware('auth:api')->prefix('v1')->group(function () {
 
     Route::resources([
-        'users' => 'UsersController',
-        'tasks' => 'TasksController'
+        'users' => 'Api\UsersController',
+        'tasks' => 'Api\TasksController'
     ]);
 
 });
