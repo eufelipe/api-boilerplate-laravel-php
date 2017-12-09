@@ -4,59 +4,79 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Task;
-use App\Http\Requests\TasksRequest as Request;
-use Carbon\Carbon;
+use App\Http\Requests\TasksRequest;
+use App\Services\TaskService;
+use Illuminate\Http\Request;
 
 class TasksController extends Controller
 {
 
-    const TASK_TIME_CACHE_IN_MINUTES = 10;
-    const TASK_CACHE_KEY = 'api::tasks';
+
+    /**
+     * @var mixed
+     */
+    private $taskService = null;
 
 
-    public function index()
+    public function __construct()
     {
-        $timeCacheInMinutes = Carbon::now()->addMinutes(self::TASK_TIME_CACHE_IN_MINUTES);
-        $tasks = \Cache::remember(self::TASK_CACHE_KEY, $timeCacheInMinutes, function () {
-            return Task::all();
-        });
-        return $tasks;
+        $this->taskService = resolve(TaskService::class);
+    }
+
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function index(Request $request)
+    {
+        return $this->taskService->searchTasks($request);
 
     }
 
-    public function store(Request $request)
+
+    /**
+     * @param TasksRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+    public function store(TasksRequest $request)
     {
-        $this->cleanCache();
-        $data = $request->all();
-        $data['user_id'] = \Auth::user()->id;
-        return Task::create($data);
+        return $this->taskService->createTask($request);
     }
 
-    private function cleanCache()
-    {
-        \Cache::forget(self::TASK_CACHE_KEY);
-    }
 
-    public function update(Request $request, Task $task)
+    /**
+     * @param TasksRequest $request
+     * @param Task $task
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(TasksRequest $request, Task $task)
     {
-        $this->cleanCache();
         $this->authorize('update', $task);
-        $task->update($request->all());
-        return $task;
+        return $this->taskService->updateTask($request, $task);
     }
 
+
+    /**
+     * @param Task $task
+     * @return Task
+     */
     public function show(Task $task)
     {
         $this->authorize('view', $task);
         return $task;
     }
 
+
+    /**
+     * @param Task $task
+     * @return Task
+     */
     public function destroy(Task $task)
     {
-        $this->cleanCache();
         $this->authorize('delete', $task);
-        $task->delete();
-        return $task;
+        return $this->taskService->deleteTask($task);
     }
 
 }
