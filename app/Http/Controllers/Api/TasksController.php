@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Task;
 use App\Http\Requests\TasksRequest as Request;
 use Carbon\Carbon;
@@ -31,6 +32,10 @@ class TasksController extends Controller
         return Task::create($data);
     }
 
+    private function cleanCache()
+    {
+        \Cache::forget(self::TASK_CACHE_KEY);
+    }
 
     public function update(Request $request, Task $task)
     {
@@ -52,11 +57,6 @@ class TasksController extends Controller
         $this->authorize('delete', $task);
         $task->delete();
         return $task;
-    }
-
-    private function cleanCache()
-    {
-        \Cache::forget(self::TASK_CACHE_KEY);
     }
 
 }
