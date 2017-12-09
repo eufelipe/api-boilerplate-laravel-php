@@ -9,14 +9,20 @@ class Task extends Model
     protected $fillable = [
         'title',
         'description',
-        'completed'
+        'completed',
+        'user_id'
     ];
 
     protected $hidden = [
-        'created_at',
-        'updated_at',
         'deleted_at'
     ];
+
+    protected $dates = [
+        'created_at',
+        'updated_at',
+    ];
+
+    public $timestamps = false;
 
     /**
      * Get the task's completed.
