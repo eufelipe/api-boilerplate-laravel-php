@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Requests\TasksRequest;
+use App\Repositories\TaskRepository;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\Models\Task;
@@ -20,6 +21,14 @@ class TaskService
 
     private $likeByColumn = null;
     private $like = null;
+
+    private $repository;
+
+
+    public function __construct()
+    {
+        $this->repository = resolve(TaskRepository::class);
+    }
 
 
     public function loadTaskFromCache()
@@ -42,8 +51,7 @@ class TaskService
      */
     public function loadTasks($orderByColumn = 'id', $order = 'asc', $like = null, $likeByColumn = null, $limit = 10)
     {
-
-        $tasks = Task::orderBy($orderByColumn, $order)
+        $tasks = $this->repository->orderBy($orderByColumn, $order)
             ->where(function ($query) use ($like, $likeByColumn) {
 
                 if (!is_null($like) && !is_null($likeByColumn)) {
@@ -120,12 +128,12 @@ class TaskService
      * @param TasksRequest $request
      * @return mixed
      */
-    public function create(TasksRequest $request)
+    public function createTask(TasksRequest $request)
     {
         $this->clearCache();
         $data = $request->all();
         $data['user_id'] = \Auth::user()->id;
-        return Task::create($data);
+        return $this->repository->create($data);
     }
 
     /**
@@ -134,7 +142,7 @@ class TaskService
      * @param Task $task
      * @return Task
      */
-    public function update(TasksRequest $request, Task $task)
+    public function updateTask(TasksRequest $request, Task $task)
     {
         $this->clearCache();
         $task->update($request->all());
